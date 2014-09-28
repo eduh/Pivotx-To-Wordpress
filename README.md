@@ -12,6 +12,7 @@ Usage is very simple:  just place the script somewhere in the pivotx site and ex
 
 Before executing you should setup your database connection at the beginning of the file.
 You can set some defines at the beginning of the file to play around with single records or a small set.
+
 define('MAX_ROWS' ,'10');  //0= output all rows... or give a number. Makes it easy for testing just a small content set
 
 define('SINGLE_SHOT' ,'0');  //0=disable single shot... or give a pivotx id. This will export only one specific post. Overrides MAX_ROWS
