@@ -18,7 +18,10 @@ You can set some defines at the beginning of the file to play around with single
 <br>define('MAP_EXCERPT' ,'1');  //1=Map the pivotx 'introduction' to the WP excerpt field 0=no excerpt
 <br>define('MAP_CATEGORIES' ,'1');  //1=Rename or map categories using the $arrCatMap array 1=map 0=do not transform. 
 
+Conversion was done for site http://ambientblog.net/blog/.  In the script you may find some links or info which you should replace with your own info.
 
 ###Post Counter information (p2w_wzup.php)
 
 When using the Pivotx wzup extension it is possible to convert the post counts. Use p2w_wzup.php script on the file which holds the counters. In the script simply adjust the path to the file and run the script. The output is the sql statements needed to run on wordpress when using the top10 plugin at http://ajaydsouza.com/wordpress/plugins/top-10/
+
+
