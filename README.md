@@ -12,11 +12,11 @@ Usage is very simple:  just place the p2w.php script somewhere in the pivotx sit
 
 Before executing you should setup your database connection at the beginning of the file.
 You can set some defines at the beginning of the file to play around with single records or a small set or do specific transforms.
-define('MAX_ROWS' ,'10');  //0= output all rows... or give a number. Makes it easy for testing just a small content set
-define('SINGLE_SHOT' ,'0');  //0=disable single shot... or give a pivotx id. This will export only one specific post. Overrides MAX_ROWS
-define('TRANSFORM_HTML' ,'1');  //1=transform some specific pivotx markup like  [[popup and [[image  to html and where appropriate to thickbox wordpress plugin. 0=do not transform
-define('MAP_EXCERPT' ,'1');  //1=Map the pivotx 'introduction' to the WP excerpt field 0=no excerpt
-define('MAP_CATEGORIES' ,'1');  //1=Rename or map categories using the $arrCatMap array 1=map 0=do not transform. 
+<br>define('MAX_ROWS' ,'10');  //0= output all rows... or give a number. Makes it easy for testing just a small content set
+<br>define('SINGLE_SHOT' ,'0');  //0=disable single shot... or give a pivotx id. This will export only one specific post. Overrides MAX_ROWS
+<br>define('TRANSFORM_HTML' ,'1');  //1=transform some specific pivotx markup like  [[popup and [[image  to html and where appropriate to thickbox wordpress plugin. 0=do not transform
+<br>define('MAP_EXCERPT' ,'1');  //1=Map the pivotx 'introduction' to the WP excerpt field 0=no excerpt
+<br>define('MAP_CATEGORIES' ,'1');  //1=Rename or map categories using the $arrCatMap array 1=map 0=do not transform. 
 
 
 ###Post Counter information (p2w_wzup.php)
