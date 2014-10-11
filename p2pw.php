@@ -1,27 +1,49 @@
 <?php
-
-//Convert PivotX blog to Wordpress
+//Convert PivotX blog to Wordpress WXR file
 //See https://github.com/eduh/Pivotx-To-Wordpress/
+set_time_limit(0);
+//Do not display erros but write a log
+error_reporting(E_ALL);
+ini_set('display_errors',0);
 
-//Set your MySQL database connection here...localhost is most likely
-$host='localhost';
-$user='user here ';
+//Set your database connection here
+$host='localhost';  
+$user='user here';
 $password='password here';
 $db='db here';
 init_pivotxdb($host,$user,$password,$db);
 
-define('OUTPUT_XML' ,'0'); //1=sent xml header 0=just output 
-define('DEBUG_QUERY' ,'0');  //1= output the query in xml
-define('MAX_ROWS' ,'0');  //0= all or give a number. Makes it easy for testing just one row
-//define('MAX_ROWS' ,'10');  //0= all rows... or give a number. Makes it easy for testing just a small content set
-define('SINGLE_SHOT' ,'0');  //0=disable single shot... or give a number. This will export only one specific post. Overrides MAX_ROWS
+define('OUTPUT_XML' ,'0'); //1=sent xml header 0=normal use
+define('DEBUG_QUERY' ,'0');  //1= output the query in xml 0=normal use
+define('MAX_ROWS' ,'0');  //0= all or give a number. Makes it easy for testing just a small set
+//define('MAX_ROWS' ,'3');  //0= all rows (normal use)... or give a number. Makes it easy for testing just a small content set
+define('SINGLE_SHOT' ,'0');  //0=disable single shot (normal use)... or give a number. This will export only one specific post. Overrides MAX_ROWS
 //define('SINGLE_SHOT' ,'310');  //this is a post with lots of comments  ...vuvuzela
 //define('SINGLE_SHOT' ,'584');  //this is test post 'lutberg'
+//define('SINGLE_SHOT' ,'493');  //this is test post 
+//define('SINGLE_SHOT' ,'643');  //this is test post with spotify llinks
+define('TRANSFORM_HTML' ,'1');  //transform some pivotx markup like  [[popup and [[image  to html and where appropriate to thickbox wordpress plugin
+define('MAP_EXCERPT' ,'1');  //Map the pivotx 'introduction' to the WP excerpt field
+define('MAP_CATEGORIES' ,'1');  //Rename or map categories using the $arrCatMap array 1=map 0=do not transform
+//Put your categories in this array to map them to another wordpress category. The key is the pivotx category, the value as it goes to wordpress. Cats that are not present will be mapped 1:1
+$arrCatMap=array(
+	'ambient-music'=>'ambient music',
+	'dreamscenes'=>'dreamscenes',
+	'exclusives'=>'exclusives',
+	'mixes--podcasts'=>'mixes--podcasts',
+	'other-music'=>'other-music',
+	'other-news'=>'other-news',
+	'reviews'=>'reviews',
+	'selling-my-stuff'=>'elling-my-stuff',
+	'videos'=>'videos',
+	'weird-or-forgotten-music'=>'weird-or-forgotten-music');
 define('br','<br/>');
 define('N',"\n");
 define('RN',"\r\n");
-error_reporting(E_ALL);
-ini_set('display_errors',1);
+define('pre',"<pre>");
+define('pree',"</pre>");
+
+
 
 if(OUTPUT_XML=='1')
 {
@@ -49,14 +71,32 @@ function get_pivotx_entries()
 	}
 	$result=mysql_query($query);
 	while ($row = mysql_fetch_assoc($result)) {
+		p2w_format($row['body'],$row['title']);
 		echo '<item>'.N;
 			echo '<pubDate>'.date("D, d M Y H:i:s T", strtotime($row['publish_date'])).'</pubDate>'.N;
 			echo '<dc:creator>Peter van Cooten</dc:creator>'.N;
-			echo '<guid isPermaLink="false">http://localhost/wordpress/?p='.$row['uid'].'</guid>'.N;
+			echo '<guid isPermaLink="false">http://www.ambientblog.net/wordpress/?p='.$row['uid'].'</guid>'.N;
 			echo '<description>Beschrijving hier</description>'.N;
 			echo '<title><![CDATA['. htmlentities($row['title']).']]></title>'.N;
-			echo '<content:encoded><![CDATA['. str_replace(array(']','['), '',$row['introduction']).str_replace(array(']','['), '',$row['body']).']]></content:encoded>'.N;
-			echo '<excerpt:encoded><![CDATA['. str_replace(array(']','['), '',$row['introduction']).']]></excerpt:encoded>'.N;
+			//echo '<content:encoded><![CDATA['. str_replace(array(']','['), '',$row['introduction']).str_replace(array(']','['), '',$row['body']).']]></content:encoded>'.N;
+			//echo '<excerpt:encoded><![CDATA['. str_replace(array(']','['), '',$row['introduction']).']]></excerpt:encoded>'.N;
+			if(TRANSFORM_HTML=='1')
+			{
+				echo '<content:encoded><![CDATA[';
+				echo p2w_format($row['introduction'].$row['body']);
+				echo ']]></content:encoded>'.N;
+			}else{
+				echo '<content:encoded><![CDATA['. $row['introduction'].$row['body'].']]></content:encoded>'.N;
+			}
+			if(MAP_EXCERPT=='1')
+			{
+				if(TRANSFORM_HTML=='1')
+				{
+					echo '<excerpt:encoded><![CDATA['.p2w_format($row['introduction']).']]></excerpt:encoded>'.N;
+				}else{
+					echo '<excerpt:encoded><![CDATA['.$row['introduction'].']]></excerpt:encoded>'.N;
+				}
+			}
 			echo '<wp:post_name>'.$row['uri'].'</wp:post_name>'.N;
 			echo '<wp:post_id>'.$row['uid'].'</wp:post_id>'.N;
 			echo '<wp:post_date>'.$row['date'].'</wp:post_date>'.N;
@@ -76,9 +116,74 @@ function get_pivotx_entries()
 	}
 }
 
+function p2w_format($in)
+{
+/*
+<a href="http://www.ambientblog.net/blog/images/ds-final-square-750.jpg" title="Flower" class="thickbox">
+  <img src="http://www.ambientblog.net/blog/images/ds-final-square-750.thumb.jpg" alt="Flower" />ssss
+</a>
+*/
+$out=array();
+$arrStart=explode('[[',$in);
+//echo pre;
+//print_r($arrStart);exit;
+
+
+foreach($arrStart as $v)
+{
+	$str=strstr($v,']]', TRUE);
+	if($str)
+	{
+		if(substr(trim($v),0,5)=='popup')
+		{
+			//Array ( [0] => popup file= [1] => sonmi451-fourpeaks.jpg [2] => description= [3] => (thumbnail) [4] => alt= [5] => Four Peaks [6] => ]]
+			$arrTmp=explode('"',$v);
+			$strTmp='<p style="text-align:center;"><a href="http://www.ambientblog.net/blog/images/'.$arrTmp[1].'" description="'.$arrTmp[5].'" title="'.$arrTmp[5].'" class="thickbox">
+			  <img src="http://www.ambientblog.net/blog/images/'.str_replace(array('jpg','png'), array('thumb.jpg','thumb.png'),$arrTmp[1]).'" alt="'.$arrTmp[5].'" />
+			</a>';
+
+			//print_r($arrtmp);exit;
+			//echo $str.substr($v,strlen($str));exit;
+			$out[]=$strTmp.substr($v,strlen($str)+2);
+		}
+		if(substr(trim($v),0,5)=='image')
+		{
+			if(substr(trim($v),0,6)=='image:')
+			{
+				$arrTmp=explode(':',$v);
+				$strTmp='<p style="text-align:center;"><img src="http://www.ambientblog.net/blog/images/'.$arrTmp[1].'" title="'.$arrTmp[2].'" alt="'.$arrTmp[2].'" class="pivotx-image"/>';
+			}else{
+				$arrTmp=explode('"',$v);
+				$strTmp='<p style="text-align:center;"><img src="http://www.ambientblog.net/blog/images/'.$arrTmp[1].'" title="'.$arrTmp[3].'" alt="'.$arrTmp[3].'" class="pivotx-image"/>';
+			}
+			/*
+			echo pre;
+			print_r($arrTmp);
+			echo pree;
+			*/
+			
+			$out[]=$strTmp.substr($v,strlen($str)+2);
+		}
+		//$out .= $tmp.substr($v,strlen($str)+2);		
+	}else{
+		$out[]=$v;
+	}
+}
+	$str=implode($out);
+	$str=str_replace(array('/blog/pivotx/jwplayer.php','/blog/pivotx/jwplayerd.php','<p><p style="text-align:center;">'),array('/jwp/jwplayer.php','/jwp/jwplayerd.php','<p style="text-align:center;">'),$str);
+	return $str;
+	//exit;
+	//echo $out;exit;
+	//[[popup file="sonmi451-fourpeaks.jpg" description="(thumbnail)" alt="Four Peaks" ]]
+	//[[image file="glonti.jpg" alt="Rezo Glonti " ]]	
+	//	return $out;
+}
+
+
 
 function get_pivotx_categories($id)
 {
+	global $arrCatMap;
 	$cat='';
 	$query='SELECT * FROM pivotx_categories where target_uid='.$id;
 	$result=mysql_query($query);
@@ -91,7 +196,12 @@ function get_pivotx_categories($id)
 		echo '<querycat>'.$query.'</querycat>';
 	}
 	while ($row = mysql_fetch_assoc($result)) {
-			$cat .= '<category domain="category" nicename="'.$row['category'].'"><![CDATA['.$row['category'].']]></category>'.N;
+			if(MAP_CATEGORIES=='1' && array_key_exists($row['category'],$arrCatMap))
+			{
+				$cat .= '<category domain="category" nicename="'.$arrCatMap[$row['category']].'"><![CDATA['.$arrCatMap[$row['category']].']]></category>'.N;
+			}else{
+				$cat .= '<category domain="category" nicename="'.$row['category'].'"><![CDATA['.$row['category'].']]></category>'.N;
+			}
 	}
 		if($cat!='')
 		{
@@ -226,13 +336,13 @@ function show_header()
 	>
 	<channel>
 		<title>AMBIENT BLOG</title>
-		<link>http://localhost/wordpress</link>
+		<link>http://www.ambientblog.net/blog</link>
 		<description>This is a personal weblog about my current (ambient) favourites. </description>
 		<pubDate>Mon, 22 Sep 2014 22:14:29 +0000</pubDate>
 		<language>en</language>
 		<wp:wxr_version>1.1</wp:wxr_version>
-		<wp:base_site_url>http://localhost/wordpress</wp:base_site_url>
-		<wp:base_blog_url>http://localhost/wordpress</wp:base_blog_url>
+		<wp:base_site_url>http://www.ambientblog.net</wp:base_site_url>
+		<wp:base_blog_url>http://www.ambientblog.net/blog</wp:base_blog_url>
 		<wp:author><wp:author_id>1</wp:author_id>
 		<wp:author_login>JohnDoe</wp:author_login>
 		<wp:author_email>john@doe.nl</wp:author_email>
@@ -285,6 +395,15 @@ Thickbox
 <a href="http://www.ambientblog.net/blog/images/ds-final-square-750.jpg" title="Flower" class="thickbox">
   <img src="http://www.ambientblog.net/blog/images/ds-final-square-750.thumb.jpg" alt="Flower" />ssss
 </a>
+*/
+
+/*
+Clear the db before load
+TRUNCATE TABLE wp_term_relationships;
+TRUNCATE TABLE wp_posts;
+TRUNCATE TABLE wp_comments;
+DELETE FROM wp_terms WHERE term_id>2;
+DELETE FROM wp_term_taxonomy WHERE term_id>2;
 */
 
 
