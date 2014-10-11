@@ -75,7 +75,7 @@ function get_pivotx_entries()
 		echo '<item>'.N;
 			echo '<pubDate>'.date("D, d M Y H:i:s T", strtotime($row['publish_date'])).'</pubDate>'.N;
 			echo '<dc:creator>YOUR NAME</dc:creator>'.N;
-			echo '<guid isPermaLink="false">http://www.yoursitehere.com//wordpress/?p='.$row['uid'].'</guid>'.N;
+			echo '<guid isPermaLink="false">http://www.yoursitehere.com/wordpress/?p='.$row['uid'].'</guid>'.N;
 			echo '<description>YOUR DESCRIPTION</description>'.N;
 			echo '<title><![CDATA['. htmlentities($row['title']).']]></title>'.N;
 			//echo '<content:encoded><![CDATA['. str_replace(array(']','['), '',$row['introduction']).str_replace(array(']','['), '',$row['body']).']]></content:encoded>'.N;
