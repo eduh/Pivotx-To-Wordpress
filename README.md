@@ -7,6 +7,7 @@ PivotX is an blog framework and when migrating to Wordpress a little conversion 
 Best is to get the PivotX content from the database itself and create a WXR (Wordpress extended RSS)  file. 
 This file can be imported in Wordpress with the Wordpress Importer.
 Post, comments,tags and categories are imported as well as the post date.
+This little script works only if you have a PivotX based on a MySQL backend. Flat dbfiles won't work.
 
 Usage is very simple:  just place the p2w.php script somewhere in the pivotx site and execute it. Save the output file somewhere (use the xml source if the output is not rendered as xml in your browser) and upload it to Wordpress. 
 
