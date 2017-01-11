@@ -24,6 +24,6 @@ Conversion was done for site http://ambientblog.net/blog/.  In the script you ma
 ###Post Counter information (p2w_wzup.php)
 
 When using the Pivotx wzup extension it is possible to convert the post counts. Use p2w_wzup.php script on the file which holds the counters. In the script simply adjust the path to the wzup db file and run the script. The output is the sql statements needed to run on wordpress when using the top10 plugin at http://ajaydsouza.com/wordpress/plugins/top-10/
-<br>Notice: the wzup db `may` be corrupted.  Invalid entries are skipped.....
+<br>Notice: the wzup db `may` be corrupted.  Invalid entries are skipped.
 
 
